@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Huddle</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230a0a0a'/><circle cx='11' cy='16' r='4' fill='%23fff'/><circle cx='21' cy='16' r='4' fill='%23fff'/><circle cx='16' cy='22' r='3' fill='%23fff' opacity='.5'/></svg>"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+:root{
+  --black:#0a0a0a;--white:#fff;--off:#f9f9f8;
+  --g1:#f4f4f3;--g2:#ebebea;--g3:#d8d8d6;--g4:#a8a8a4;--g5:#6b6b68;--g6:#3a3a38;
+  --red:#dc2626;--red-bg:#fef2f2;--green:#16a34a;--green-bg:#f0fdf4;
+  --amber:#d97706;--amber-bg:#fffbeb;--blue:#2563eb;--blue-bg:#eff6ff;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;
+  --border:#e5e5e3;--border2:#d0d0ce;
+  --font:'Instrument Sans',system-ui,sans-serif;--serif:'Instrument Serif',Georgia,serif;
+  --r:8px;--rl:12px;--rxl:18px;
+  --shadow:0 1px 3px rgba(0,0,0,.06);--shadow-card:0 2px 12px rgba(0,0,0,.06);
+}
+html,body{min-height:100vh}
+body{font-family:var(--font);background:var(--white);color:var(--black);font-size:15px}
+.screen{display:none;min-height:100vh;flex-direction:column;align-items:center}
+.screen.active{display:flex}
+.container{width:100%;max-width:480px;padding:0 20px}
+
+/* Header */
+.header{width:100%;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--white)}
+.logo{display:flex;align-items:center;gap:8px}
+.lm{width:26px;height:26px;background:var(--black);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lm svg{width:16px;height:16px}
+.ln{font-family:var(--serif);font-size:18px;font-weight:400;letter-spacing:-.01em}
+
+/* Home */
+.home-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;gap:24px}
+.home-title{font-family:var(--serif);font-size:36px;font-weight:400;letter-spacing:-.03em;line-height:1.1}
+.home-sub{font-size:14px;color:var(--g5);max-width:320px;line-height:1.6}
+.games-grid{display:flex;flex-direction:column;gap:10px;width:100%;max-width:380px}
+.game-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--rl);
+  padding:20px;display:flex;align-items:center;gap:16px;cursor:pointer;
+  transition:all .15s;box-shadow:var(--shadow);text-align:left;
+}
+.game-card:hover{border-color:var(--border2);box-shadow:var(--shadow-card);transform:translateY(-1px)}
+.game-icon{width:44px;height:44px;border-radius:var(--rl);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.game-info{flex:1}
+.game-name{font-size:15px;font-weight:600;color:var(--black);margin-bottom:3px}
+.game-desc{font-size:12px;color:var(--g4);line-height:1.5}
+.game-arrow{font-size:16px;color:var(--g3)}
+.coming{opacity:.45;pointer-events:none}
+.coming .game-name::after{content:' (soon)';font-weight:400;color:var(--g4);font-size:11px}
+
+/* Setup */
+.setup-body{flex:1;padding:28px 20px;width:100%;max-width:480px}
+.setup-title{font-family:var(--serif);font-size:26px;font-weight:400;letter-spacing:-.02em;margin-bottom:4px}
+.setup-sub{font-size:13px;color:var(--g5);margin-bottom:24px}
+.sec-label{font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.players-list{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.player-row{display:flex;gap:8px;align-items:center}
+.player-num{width:24px;height:24px;border-radius:50%;background:var(--g1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--g5);flex-shrink:0}
+.player-input{flex:1;background:var(--g1);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;font-size:14px;color:var(--black);font-family:var(--font);outline:none;transition:border-color .12s}
+.player-input:focus{border-color:var(--g4);background:var(--white)}
+.player-rm{width:28px;height:28px;border-radius:6px;border:none;background:none;color:var(--g3);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s}
+.player-rm:hover{background:var(--red-bg);color:var(--red)}
+.add-player-btn{width:100%;padding:8px;border-radius:var(--r);border:1px dashed var(--border2);background:none;color:var(--g4);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .12s;margin-bottom:24px}
+.add-player-btn:hover{border-color:var(--g5);color:var(--g5);background:var(--g1)}
+
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.cat-btn{padding:8px 6px;border-radius:var(--r);border:1px solid var(--border);background:none;color:var(--g5);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .12s;text-align:center}
+.cat-btn:hover{border-color:var(--g4);color:var(--black)}
+.cat-btn.on{background:var(--black);color:var(--white);border-color:var(--black)}
+.custom-word-row{display:flex;gap:8px;margin-bottom:24px}
+.custom-input{flex:1;background:var(--g1);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;font-size:14px;color:var(--black);font-family:var(--font);outline:none}
+.custom-input:focus{border-color:var(--g4);background:var(--white)}
+
+.start-btn{width:100%;padding:14px;border-radius:var(--r);border:none;background:var(--black);color:var(--white);font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:all .12s}
+.start-btn:hover{background:var(--g6)}
+.start-btn:disabled{background:var(--g3);cursor:default}
+
+/* Role reveal */
+.reveal-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;gap:16px;width:100%;max-width:480px}
+.pass-msg{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--black);letter-spacing:-.02em}
+.pass-name{font-size:18px;font-weight:700;color:var(--black);margin-bottom:4px}
+.pass-sub{font-size:13px;color:var(--g4)}
+.reveal-card{
+  width:100%;max-width:320px;background:var(--white);border:1px solid var(--border);
+  border-radius:var(--rxl);padding:40px 24px;text-align:center;
+  box-shadow:var(--shadow-card);
+}
+.reveal-card.imposter{border-color:var(--red);background:var(--red-bg)}
+.reveal-role{font-family:var(--serif);font-size:28px;font-weight:400;color:var(--black);margin-bottom:6px;letter-spacing:-.02em}
+.reveal-card.imposter .reveal-role{color:var(--red)}
+.reveal-word{font-size:15px;color:var(--g5);line-height:1.5}
+.reveal-emoji{font-size:40px;margin-bottom:10px;display:block}
+.tap-btn{padding:12px 28px;border-radius:var(--r);border:none;background:var(--black);color:var(--white);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:all .12s}
+.tap-btn:hover{background:var(--g6)}
+.tap-btn.outline{background:none;color:var(--g5);border:1px solid var(--border)}
+.tap-btn.outline:hover{background:var(--g1);color:var(--black)}
+
+/* Discussion */
+.discuss-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;gap:20px;width:100%;max-width:480px}
+.discuss-title{font-family:var(--serif);font-size:28px;font-weight:400;letter-spacing:-.02em}
+.discuss-sub{font-size:14px;color:var(--g5);max-width:320px;line-height:1.6}
+.timer-display{font-family:var(--serif);font-size:64px;font-weight:400;color:var(--black);letter-spacing:-.03em;line-height:1}
+.timer-display.urgent{color:var(--red)}
+.timer-bar{width:100%;max-width:300px;height:4px;background:var(--g2);border-radius:4px;overflow:hidden}
+.timer-fill{height:100%;background:var(--black);border-radius:4px;transition:width 1s linear}
+.timer-fill.urgent{background:var(--red)}
+.discuss-players{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.dp{font-size:12px;padding:5px 12px;border-radius:20px;background:var(--g1);color:var(--g5);font-weight:500}
+.timer-controls{display:flex;gap:8px}
+
+/* Vote */
+.vote-body{flex:1;padding:28px 20px;width:100%;max-width:480px}
+.vote-title{font-family:var(--serif);font-size:26px;font-weight:400;letter-spacing:-.02em;margin-bottom:4px}
+.vote-sub{font-size:13px;color:var(--g5);margin-bottom:20px}
+.vote-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.vote-btn{
+  padding:14px 16px;border-radius:var(--r);border:1px solid var(--border);
+  background:var(--white);font-family:var(--font);font-size:14px;font-weight:500;
+  color:var(--black);cursor:pointer;transition:all .12s;text-align:left;
+  display:flex;align-items:center;gap:10px;
+}
+.vote-btn:hover{border-color:var(--border2);background:var(--g1)}
+.vote-btn.selected{border-color:var(--black);background:var(--g1);font-weight:600}
+.vote-avatar{width:28px;height:28px;border-radius:50%;background:var(--g2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--g5);flex-shrink:0}
+.vote-count{margin-left:auto;font-size:12px;color:var(--g4);font-weight:600}
+
+/* Results */
+.results-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;gap:16px;width:100%;max-width:480px}
+.results-card{
+  width:100%;background:var(--white);border:1px solid var(--border);
+  border-radius:var(--rxl);padding:32px 24px;text-align:center;
+  box-shadow:var(--shadow-card);
+}
+.results-emoji{font-size:48px;margin-bottom:10px;display:block}
+.results-title{font-family:var(--serif);font-size:26px;font-weight:400;letter-spacing:-.02em;margin-bottom:8px}
+.results-detail{font-size:14px;color:var(--g5);line-height:1.7;margin-bottom:16px}
+.results-word{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--black);background:var(--g1);padding:10px 18px;border-radius:var(--r);display:inline-block;margin-bottom:8px}
+.results-imposter{font-weight:600;color:var(--red)}
+.results-votes{margin-top:12px;text-align:left}
+.rv-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--g2);font-size:13px}
+.rv-row:last-child{border-bottom:none}
+.rv-name{flex:1;font-weight:500}
+.rv-count{font-weight:600;color:var(--g5)}
+.rv-bar{flex:2;height:6px;background:var(--g2);border-radius:4px;overflow:hidden}
+.rv-fill{height:100%;border-radius:4px;background:var(--black)}
+.rv-fill.top{background:var(--red)}
+.play-again-btns{display:flex;gap:8px;width:100%;max-width:320px}
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:100;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)}
+.modal-bg.open{display:flex}
+.modal-box{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:24px;width:100%;max-width:400px;box-shadow:0 16px 48px rgba(0,0,0,.12);animation:mIn .16s ease}
+@keyframes mIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.modal-title{font-family:var(--serif);font-size:20px;font-weight:400;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--g4);margin-bottom:16px}
+.modal-label{font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;margin-top:12px}
+.modal-label:first-of-type{margin-top:0}
+.modal-input{width:100%;background:var(--g1);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;font-size:14px;color:var(--black);font-family:var(--font);outline:none}
+.modal-input:focus{border-color:var(--g4);background:var(--white)}
+.modal-textarea{width:100%;background:var(--g1);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;font-size:13px;color:var(--black);font-family:var(--font);outline:none;resize:vertical;min-height:80px;line-height:1.6}
+.modal-textarea:focus{border-color:var(--g4);background:var(--white)}
+.modal-btns{display:flex;gap:8px;margin-top:16px}
+.modal-save{flex:1;padding:10px;border-radius:var(--r);border:none;background:var(--black);color:var(--white);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.modal-save:hover{background:var(--g6)}
+.modal-cancel{flex:1;padding:10px;border-radius:var(--r);border:1px solid var(--border);background:none;color:var(--g5);font-size:13px;cursor:pointer;font-family:var(--font)}
+.modal-cancel:hover{background:var(--g1)}
+.create-pack-btn{padding:8px 14px;border-radius:var(--r);border:1px dashed var(--border2);background:none;color:var(--g4);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .12s;grid-column:1/-1}
+.create-pack-btn:hover{border-color:var(--g5);color:var(--g5);background:var(--g1)}
+.cat-btn .cat-del{display:none;margin-left:4px;font-size:13px;color:var(--g3);cursor:pointer}
+.cat-btn:hover .cat-del{display:inline}
+.cat-btn .cat-del:hover{color:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="screen active" id="homeScreen">
+  <div class="header"><div class="logo"><div class="lm"><svg viewBox="0 0 16 16" fill="none"><circle cx="5" cy="7" r="2.5" fill="#fff"/><circle cx="11" cy="7" r="2.5" fill="#fff"/><circle cx="8" cy="12" r="2" fill="#fff" opacity=".5"/></svg></div><div class="ln">Huddle</div></div></div>
+  <div class="home-body">
+    <div>
+      <div class="home-title">Party games,<br/>one phone.</div>
+      <div class="home-sub" style="margin-top:10px">Pass the phone around. No downloads, no accounts, no internet needed.</div>
+    </div>
+    <div class="games-grid">
+      <div class="game-card" onclick="goSetup()">
+        <div class="game-icon" style="background:var(--red-bg);color:var(--red)">🕵️</div>
+        <div class="game-info">
+          <div class="game-name">Imposter</div>
+          <div class="game-desc">Everyone gets a word. One person doesn't. Find the imposter.</div>
+        </div>
+        <div class="game-arrow">→</div>
+      </div>
+      <div class="game-card coming">
+        <div class="game-icon" style="background:var(--blue-bg);color:var(--blue)">🎨</div>
+        <div class="game-info">
+          <div class="game-name">Drawing</div>
+          <div class="game-desc">Draw the word. Others guess what it is.</div>
+        </div>
+        <div class="game-arrow">→</div>
+      </div>
+      <div class="game-card coming">
+        <div class="game-icon" style="background:var(--purple-bg);color:var(--purple)">💬</div>
+        <div class="game-info">
+          <div class="game-name">Would You Rather</div>
+          <div class="game-desc">Impossible choices. Debate ensues.</div>
+        </div>
+        <div class="game-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="screen" id="setupScreen">
+  <div class="header"><div class="logo"><div class="lm"><svg viewBox="0 0 16 16" fill="none"><circle cx="5" cy="7" r="2.5" fill="#fff"/><circle cx="11" cy="7" r="2.5" fill="#fff"/><circle cx="8" cy="12" r="2" fill="#fff" opacity=".5"/></svg></div><div class="ln">Huddle</div></div></div>
+  <div class="setup-body">
+    <div class="setup-title">Set up the round</div>
+    <div class="setup-sub">Add 3–8 players, pick a category or enter a custom word.</div>
+
+    <div class="sec-label">Players</div>
+    <div class="players-list" id="playersList"></div>
+    <button class="add-player-btn" id="addPlayerBtn" onclick="addPlayer()">+ Add player</button>
+
+    <div class="sec-label">Word</div>
+    <div class="cat-grid" id="catGrid"></div>
+    <div class="custom-word-row" style="margin-top:4px">
+      <input class="custom-input" id="customWord" placeholder="Or type a single custom word..." autocomplete="off" oninput="selectCat('custom')"/>
+    </div>
+
+    <button class="start-btn" id="startBtn" onclick="startGame()">Start round</button>
+  </div>
+</div>
+
+<!-- ROLE REVEAL -->
+<div class="screen" id="revealScreen">
+  <div class="header"><div class="logo"><div class="lm"><svg viewBox="0 0 16 16" fill="none"><circle cx="5" cy="7" r="2.5" fill="#fff"/><circle cx="11" cy="7" r="2.5" fill="#fff"/><circle cx="8" cy="12" r="2" fill="#fff" opacity=".5"/></svg></div><div class="ln">Huddle</div></div></div>
+  <div class="reveal-body" id="revealBody"></div>
+</div>
+
+<!-- DISCUSSION -->
+<div class="screen" id="discussScreen">
+  <div class="header"><div class="logo"><div class="lm"><svg viewBox="0 0 16 16" fill="none"><circle cx="5" cy="7" r="2.5" fill="#fff"/><circle cx="11" cy="7" r="2.5" fill="#fff"/><circle cx="8" cy="12" r="2" fill="#fff" opacity=".5"/></svg></div><div class="ln">Huddle</div></div></div>
+  <div class="discuss-body">
+    <div class="discuss-title">Discuss.</div>
+    <div class="discuss-sub">Each player describes the word vaguely. The imposter has to bluff. Then vote.</div>
+    <div class="timer-display" id="timerDisplay">3:00</div>
+    <div class="timer-bar"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+    <div class="discuss-players" id="discussPlayers"></div>
+    <div class="timer-controls">
+      <button class="tap-btn" onclick="goVote()">Skip to vote →</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOTE -->
+<div class="screen" id="voteScreen">
+  <div class="header"><div class="logo"><div class="lm"><svg viewBox="0 0 16 16" fill="none"><circle cx="5" cy="7" r="2.5" fill="#fff"/><circle cx="11" cy="7" r="2.5" fill="#fff"/><circle cx="8" cy="12" r="2" fill="#fff" opacity=".5"/></svg></div><div class="ln">Huddle</div></div></div>
+  <div class="vote-body" id="voteBody"></div>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="resultsScreen">
+  <div class="header"><div class="logo"><div class="lm"><svg viewBox="0 0 16 16" fill="none"><circle cx="5" cy="7" r="2.5" fill="#fff"/><circle cx="11" cy="7" r="2.5" fill="#fff"/><circle cx="8" cy="12" r="2" fill="#fff" opacity=".5"/></svg></div><div class="ln">Huddle</div></div></div>
+  <div class="results-body" id="resultsBody"></div>
+</div>
+
+<!-- Create Pack Modal -->
+<div class="modal-bg" id="packModal">
+  <div class="modal-box">
+    <div class="modal-title">Create a word pack</div>
+    <div class="modal-sub">Build a custom category with your own words. It'll save and appear alongside the built-in categories.</div>
+    <div class="modal-label">Pack name</div>
+    <input class="modal-input" id="packName" placeholder="e.g. Islamic Terms, CS Concepts" autocomplete="off" maxlength="30"/>
+    <div class="modal-label">Words (one per line, or comma-separated)</div>
+    <textarea class="modal-textarea" id="packWords" placeholder="e.g.&#10;Tawakkul&#10;Ihsan&#10;Barakah&#10;Taqwa&#10;Rizq"></textarea>
+    <div style="font-size:11px;color:var(--g4);margin-top:4px">Minimum 5 words recommended for good gameplay</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closePackModal()">Cancel</button>
+      <button class="modal-save" onclick="savePack()">Save pack</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Word lists ──
+var CATEGORIES = {
+  "Food": ["Pizza","Sushi","Burger","Pasta","Tacos","Croissant","Ice cream","Steak","Falafel","Pancakes","Ramen","Shawarma","Biryani","Cheesecake","Hummus"],
+  "Animals": ["Elephant","Penguin","Chameleon","Dolphin","Eagle","Tiger","Octopus","Giraffe","Panda","Shark","Owl","Flamingo","Koala","Wolf","Turtle"],
+  "Movies": ["Inception","Titanic","Interstellar","The Matrix","Avengers","Frozen","Gladiator","Jurassic Park","The Dark Knight","Finding Nemo","Coco","The Lion King","Oppenheimer","Avatar","Parasite"],
+  "Places": ["Paris","Tokyo","New York","Dubai","London","Maldives","Rome","Istanbul","Cairo","Barcelona","Sydney","Machu Picchu","Santorini","Bali","Marrakech"],
+  "Sports": ["Football","Basketball","Tennis","Swimming","Boxing","Cricket","Surfing","Gymnastics","Archery","Skateboarding","Golf","Volleyball","Wrestling","Fencing","Skiing"],
+  "Jobs": ["Astronaut","Chef","Pilot","Detective","Surgeon","Firefighter","Teacher","Architect","Dentist","Librarian","DJ","Photographer","Mechanic","Lifeguard","Scientist"],
+};
+
+// ── State ──
+var players = ["","",""];
+var selectedCat = null;
+var gameWord = "";
+var gameCat = "";
+var imposterIndex = -1;
+var revealIndex = 0;
+var votes = {};
+var currentVoter = 0;
+var discussTimer = null;
+var discussTimeLeft = 180;
+
+// ── Screens ──
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome(){ show('homeScreen'); }
+
+// ── Setup ──
+function goSetup(){
+  players = ["","",""];
+  selectedCat = null;
+  document.getElementById('customWord').value = "";
+  show('setupScreen');
+  renderPlayers();
+  renderCategories();
+}
+
+function renderPlayers(){
+  var el = document.getElementById('playersList');
+  el.innerHTML = '';
+  players.forEach(function(name, i){
+    var row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML = '<div class="player-num">' + (i+1) + '</div>' +
+      '<input class="player-input" placeholder="Player ' + (i+1) + ' name" value="' + esc(name) + '" oninput="players[' + i + ']=this.value" autocomplete="off"/>' +
+      (players.length > 3 ? '<button class="player-rm" onclick="removePlayer(' + i + ')">×</button>' : '<div style="width:28px"></div>');
+    el.appendChild(row);
+  });
+  var btn = document.getElementById('addPlayerBtn');
+  btn.style.display = players.length >= 8 ? 'none' : 'block';
+}
+
+function addPlayer(){
+  if(players.length >= 8) return;
+  players.push("");
+  renderPlayers();
+  // Focus the new input
+  var inputs = document.querySelectorAll('.player-input');
+  if(inputs.length) inputs[inputs.length-1].focus();
+}
+
+function removePlayer(i){
+  if(players.length <= 3) return;
+  players.splice(i, 1);
+  renderPlayers();
+}
+
+// ── Custom packs ──
+function loadPacks(){ try{ var r=localStorage.getItem('huddle_packs'); if(r) return JSON.parse(r); }catch(e){} return {}; }
+function savePacks(packs){ localStorage.setItem('huddle_packs', JSON.stringify(packs)); }
+
+function openPackModal(){
+  document.getElementById('packName').value='';
+  document.getElementById('packWords').value='';
+  document.getElementById('packModal').classList.add('open');
+  setTimeout(function(){ document.getElementById('packName').focus(); },50);
+}
+function closePackModal(){ document.getElementById('packModal').classList.remove('open'); }
+
+function savePack(){
+  var name = (document.getElementById('packName').value||'').trim();
+  if(!name){ document.getElementById('packName').focus(); return; }
+  var raw = document.getElementById('packWords').value||'';
+  // Split by newlines or commas
+  var words = raw.split(/[\n,]/).map(function(w){ return w.trim(); }).filter(Boolean);
+  if(words.length < 2){ alert('Add at least 2 words'); return; }
+  var packs = loadPacks();
+  packs[name] = words;
+  savePacks(packs);
+  closePackModal();
+  renderCategories();
+}
+
+function deletePack(name){
+  var packs = loadPacks();
+  delete packs[name];
+  savePacks(packs);
+  if(selectedCat === 'pack:'+name) selectedCat = null;
+  renderCategories();
+}
+
+document.getElementById('packModal').addEventListener('click', function(e){ if(e.target===e.currentTarget) closePackModal(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closePackModal(); });
+
+function renderCategories(){
+  var grid = document.getElementById('catGrid');
+  grid.innerHTML = '';
+  // Random
+  var rbtn = document.createElement('button');
+  rbtn.className = 'cat-btn' + (selectedCat === 'random' ? ' on' : '');
+  rbtn.textContent = '🎲 Random';
+  rbtn.onclick = function(){ selectCat('random'); };
+  grid.appendChild(rbtn);
+  // Built-in
+  Object.keys(CATEGORIES).forEach(function(cat){
+    var btn = document.createElement('button');
+    btn.className = 'cat-btn' + (selectedCat === cat ? ' on' : '');
+    btn.textContent = cat;
+    btn.onclick = function(){ selectCat(cat); };
+    grid.appendChild(btn);
+  });
+  // Custom packs
+  var packs = loadPacks();
+  Object.keys(packs).forEach(function(name){
+    var btn = document.createElement('button');
+    btn.className = 'cat-btn' + (selectedCat === 'pack:'+name ? ' on' : '');
+    btn.innerHTML = esc(name) + ' <span style="font-size:10px;color:var(--g4)">(' + packs[name].length + ')</span> <span class="cat-del" title="Delete pack">×</span>';
+    btn.onclick = function(e){
+      if(e.target.classList.contains('cat-del')){ e.stopPropagation(); deletePack(name); return; }
+      selectCat('pack:'+name);
+    };
+    grid.appendChild(btn);
+  });
+  // Create pack button
+  var cpb = document.createElement('button');
+  cpb.className = 'create-pack-btn';
+  cpb.textContent = '+ Create word pack';
+  cpb.onclick = openPackModal;
+  grid.appendChild(cpb);
+}
+
+function selectCat(cat){
+  if(cat === 'custom'){
+    selectedCat = 'custom';
+  } else {
+    selectedCat = cat;
+    document.getElementById('customWord').value = '';
+  }
+  renderCategories();
+}
+
+function startGame(){
+  // Validate
+  var names = players.map(function(n){ return n.trim(); }).filter(Boolean);
+  if(names.length < 3){ alert('Need at least 3 named players'); return; }
+  // Ensure unique
+  players = names;
+
+  // Pick word
+  var chosenCat = '';
+  if(selectedCat === 'custom'){
+    gameWord = document.getElementById('customWord').value.trim();
+    if(!gameWord){ alert('Enter a custom word'); return; }
+    chosenCat = 'Custom';
+  } else if(selectedCat && selectedCat.startsWith('pack:')){
+    var packName = selectedCat.slice(5);
+    var packs = loadPacks();
+    var words = packs[packName];
+    if(!words || !words.length){ alert('Pack is empty'); return; }
+    chosenCat = packName;
+    gameWord = words[Math.floor(Math.random() * words.length)];
+  } else if(selectedCat === 'random' || !selectedCat){
+    var allCats = Object.keys(CATEGORIES);
+    var packs = loadPacks();
+    Object.keys(packs).forEach(function(p){ allCats.push('pack:'+p); });
+    var rcat = allCats[Math.floor(Math.random() * allCats.length)];
+    if(rcat.startsWith('pack:')){
+      chosenCat = rcat.slice(5);
+      var words = packs[rcat.slice(5)];
+      gameWord = words[Math.floor(Math.random() * words.length)];
+    } else {
+      chosenCat = rcat;
+      var words = CATEGORIES[rcat];
+      gameWord = words[Math.floor(Math.random() * words.length)];
+    }
+  } else if(CATEGORIES[selectedCat]){
+    chosenCat = selectedCat;
+    var words = CATEGORIES[selectedCat];
+    gameWord = words[Math.floor(Math.random() * words.length)];
+  }
+  gameCat = chosenCat;
+
+  // Pick imposter
+  imposterIndex = Math.floor(Math.random() * players.length);
+  revealIndex = 0;
+
+  showPassScreen();
+}
+
+// ── Role Reveal (pass the phone) ──
+function showPassScreen(){
+  if(revealIndex >= players.length){
+    goDiscussion();
+    return;
+  }
+  var body = document.getElementById('revealBody');
+  body.innerHTML =
+    '<div class="pass-name">Pass to ' + esc(players[revealIndex]) + '</div>' +
+    '<div class="pass-sub">Make sure only they can see the screen</div>' +
+    '<div style="margin-top:16px"><button class="tap-btn" onclick="showRole()">I\'m ' + esc(players[revealIndex]) + ' — show my role</button></div>';
+  show('revealScreen');
+}
+
+function showRole(){
+  var isImposter = revealIndex === imposterIndex;
+  var body = document.getElementById('revealBody');
+  body.innerHTML =
+    '<div class="reveal-card' + (isImposter ? ' imposter' : '') + '">' +
+      '<div class="reveal-emoji">' + (isImposter ? '🕵️' : '✅') + '</div>' +
+      '<div class="reveal-role">' + (isImposter ? 'You are the Imposter' : 'The word is:') + '</div>' +
+      '<div class="reveal-word">' + (isImposter ? 'The category is <strong>' + esc(gameCat) + '</strong>.<br/>You don\'t know the word. Bluff!' : '<strong style="font-size:22px;color:var(--black)">' + esc(gameWord) + '</strong>') + '</div>' +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--g4);margin-top:8px">Remember your role, then pass the phone</div>' +
+    '<button class="tap-btn" onclick="nextReveal()" style="margin-top:8px">Got it — next player →</button>';
+}
+
+function nextReveal(){
+  revealIndex++;
+  showPassScreen();
+}
+
+// ── Discussion ──
+function goDiscussion(){
+  show('discussScreen');
+  discussTimeLeft = 180;
+  updateTimerDisplay();
+
+  var dp = document.getElementById('discussPlayers');
+  dp.innerHTML = players.map(function(p){ return '<div class="dp">' + esc(p) + '</div>'; }).join('');
+
+  clearInterval(discussTimer);
+  discussTimer = setInterval(function(){
+    discussTimeLeft--;
+    updateTimerDisplay();
+    if(discussTimeLeft <= 0){
+      clearInterval(discussTimer);
+      goVote();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay(){
+  var m = Math.floor(discussTimeLeft / 60);
+  var s = discussTimeLeft % 60;
+  var el = document.getElementById('timerDisplay');
+  el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  el.className = 'timer-display' + (discussTimeLeft <= 30 ? ' urgent' : '');
+  var fill = document.getElementById('timerFill');
+  fill.style.width = (discussTimeLeft / 180 * 100) + '%';
+  fill.className = 'timer-fill' + (discussTimeLeft <= 30 ? ' urgent' : '');
+}
+
+// ── Voting ──
+function goVote(){
+  clearInterval(discussTimer);
+  votes = {};
+  players.forEach(function(p){ votes[p] = 0; });
+  currentVoter = 0;
+  showVoterScreen();
+}
+
+function showVoterScreen(){
+  if(currentVoter >= players.length){
+    showResults();
+    return;
+  }
+  show('voteScreen');
+  var body = document.getElementById('voteBody');
+  var voter = players[currentVoter];
+  body.innerHTML =
+    '<div class="vote-title">' + esc(voter) + '\'s vote</div>' +
+    '<div class="vote-sub">Who do you think is the imposter?</div>' +
+    '<div class="vote-grid" id="voteGrid"></div>';
+
+  var grid = document.getElementById('voteGrid');
+  players.forEach(function(p){
+    if(p === voter) return; // can't vote for yourself
+    var btn = document.createElement('button');
+    btn.className = 'vote-btn';
+    btn.innerHTML = '<div class="vote-avatar">' + esc(p.charAt(0).toUpperCase()) + '</div>' + esc(p);
+    btn.onclick = function(){
+      votes[p]++;
+      currentVoter++;
+      showVoterScreen();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+// ── Results ──
+function showResults(){
+  show('resultsScreen');
+  var body = document.getElementById('resultsBody');
+
+  // Find who got most votes
+  var maxVotes = 0;
+  var accused = '';
+  players.forEach(function(p){
+    if(votes[p] > maxVotes){ maxVotes = votes[p]; accused = p; }
+  });
+
+  var imposterName = players[imposterIndex];
+  var caught = accused === imposterName;
+
+  // Vote breakdown
+  var sortedPlayers = players.slice().sort(function(a,b){ return votes[b] - votes[a]; });
+  var votesHtml = sortedPlayers.map(function(p){
+    var pct = players.length > 1 ? Math.round(votes[p] / players.length * 100) : 0;
+    var isTop = votes[p] === maxVotes && maxVotes > 0;
+    return '<div class="rv-row">' +
+      '<div class="rv-name">' + esc(p) + (p === imposterName ? ' 🕵️' : '') + '</div>' +
+      '<div class="rv-bar"><div class="rv-fill' + (isTop ? ' top' : '') + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="rv-count">' + votes[p] + ' vote' + (votes[p] !== 1 ? 's' : '') + '</div>' +
+    '</div>';
+  }).join('');
+
+  body.innerHTML =
+    '<div class="results-card">' +
+      '<div class="results-emoji">' + (caught ? '🎉' : '😈') + '</div>' +
+      '<div class="results-title">' + (caught ? 'Imposter caught!' : 'Imposter escaped!') + '</div>' +
+      '<div class="results-detail">' +
+        'The imposter was <span class="results-imposter">' + esc(imposterName) + '</span><br/>' +
+        (caught ? 'The group correctly identified them!' : 'The group voted for ' + esc(accused) + ' instead.') +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--g4);margin-bottom:6px">The word was</div>' +
+      '<div class="results-word">' + esc(gameWord) + '</div>' +
+      '<div class="results-votes">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Vote breakdown</div>' +
+        votesHtml +
+      '</div>' +
+    '</div>' +
+    '<div class="play-again-btns">' +
+      '<button class="tap-btn" style="flex:1" onclick="goSetup()">Play again</button>' +
+      '<button class="tap-btn outline" style="flex:1" onclick="goHome()">Home</button>' +
+    '</div>';
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Init ──
+</script>
+</body>
+</html>
