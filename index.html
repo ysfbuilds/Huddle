@@ -231,6 +231,9 @@ body{font-family:var(--font);background:var(--white);color:var(--black);font-siz
       <input class="custom-input" id="customWord" placeholder="Or type a single custom word..." autocomplete="off" oninput="selectCat('custom')"/>
     </div>
 
+    <div class="sec-label">Discussion timer</div>
+    <div class="cat-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:24px" id="timerGrid"></div>
+
     <button class="start-btn" id="startBtn" onclick="startGame()">Start round</button>
   </div>
 </div>
@@ -304,10 +307,19 @@ var gameWord = "";
 var gameCat = "";
 var imposterIndex = -1;
 var revealIndex = 0;
+var revealOrder = [];
 var votes = {};
 var currentVoter = 0;
 var discussTimer = null;
 var discussTimeLeft = 180;
+var selectedTime = 180;
+var TIME_OPTIONS = [
+  {label:'1 min', value:60},
+  {label:'2 min', value:120},
+  {label:'3 min', value:180},
+  {label:'5 min', value:300},
+  {label:'∞', value:0},
+];
 
 // ── Screens ──
 function show(id){
@@ -318,13 +330,30 @@ function show(id){
 function goHome(){ show('homeScreen'); }
 
 // ── Setup ──
+var firstSetup = true;
 function goSetup(){
-  players = ["","",""];
+  if(firstSetup){
+    players = ["","",""];
+    firstSetup = false;
+  }
   selectedCat = null;
   document.getElementById('customWord').value = "";
   show('setupScreen');
   renderPlayers();
   renderCategories();
+  renderTimerOptions();
+}
+
+function renderTimerOptions(){
+  var grid = document.getElementById('timerGrid');
+  grid.innerHTML = '';
+  TIME_OPTIONS.forEach(function(opt){
+    var btn = document.createElement('button');
+    btn.className = 'cat-btn' + (selectedTime === opt.value ? ' on' : '');
+    btn.textContent = opt.label;
+    btn.onclick = function(){ selectedTime = opt.value; renderTimerOptions(); };
+    grid.appendChild(btn);
+  });
 }
 
 function renderPlayers(){
@@ -482,8 +511,18 @@ function startGame(){
   }
   gameCat = chosenCat;
 
-  // Pick imposter
-  imposterIndex = Math.floor(Math.random() * players.length);
+  // Pick imposter — use crypto random if available for better randomization
+  var rand = (typeof crypto !== 'undefined' && crypto.getRandomValues)
+    ? crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296
+    : Math.random();
+  imposterIndex = Math.floor(rand * players.length);
+  
+  // Shuffle reveal order so it's different each round
+  revealOrder = players.map(function(_,i){ return i; });
+  for(var i=revealOrder.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=revealOrder[i]; revealOrder[i]=revealOrder[j]; revealOrder[j]=tmp;
+  }
   revealIndex = 0;
 
   showPassScreen();
@@ -495,16 +534,18 @@ function showPassScreen(){
     goDiscussion();
     return;
   }
+  var pi = revealOrder[revealIndex];
   var body = document.getElementById('revealBody');
   body.innerHTML =
-    '<div class="pass-name">Pass to ' + esc(players[revealIndex]) + '</div>' +
+    '<div class="pass-name">Pass to ' + esc(players[pi]) + '</div>' +
     '<div class="pass-sub">Make sure only they can see the screen</div>' +
-    '<div style="margin-top:16px"><button class="tap-btn" onclick="showRole()">I\'m ' + esc(players[revealIndex]) + ' — show my role</button></div>';
+    '<div style="margin-top:16px"><button class="tap-btn" onclick="showRole()">I\'m ' + esc(players[pi]) + ' — show my role</button></div>';
   show('revealScreen');
 }
 
 function showRole(){
-  var isImposter = revealIndex === imposterIndex;
+  var pi = revealOrder[revealIndex];
+  var isImposter = pi === imposterIndex;
   var body = document.getElementById('revealBody');
   body.innerHTML =
     '<div class="reveal-card' + (isImposter ? ' imposter' : '') + '">' +
@@ -524,21 +565,29 @@ function nextReveal(){
 // ── Discussion ──
 function goDiscussion(){
   show('discussScreen');
-  discussTimeLeft = 180;
-  updateTimerDisplay();
+  discussTimeLeft = selectedTime;
+  
+  if(selectedTime === 0){
+    // Unlimited mode
+    document.getElementById('timerDisplay').textContent = '∞';
+    document.getElementById('timerDisplay').className = 'timer-display';
+    document.getElementById('timerFill').style.width = '100%';
+    document.getElementById('timerFill').className = 'timer-fill';
+  } else {
+    updateTimerDisplay();
+    clearInterval(discussTimer);
+    discussTimer = setInterval(function(){
+      discussTimeLeft--;
+      updateTimerDisplay();
+      if(discussTimeLeft <= 0){
+        clearInterval(discussTimer);
+        goVote();
+      }
+    }, 1000);
+  }
 
   var dp = document.getElementById('discussPlayers');
   dp.innerHTML = players.map(function(p){ return '<div class="dp">' + esc(p) + '</div>'; }).join('');
-
-  clearInterval(discussTimer);
-  discussTimer = setInterval(function(){
-    discussTimeLeft--;
-    updateTimerDisplay();
-    if(discussTimeLeft <= 0){
-      clearInterval(discussTimer);
-      goVote();
-    }
-  }, 1000);
 }
 
 function updateTimerDisplay(){
@@ -548,7 +597,7 @@ function updateTimerDisplay(){
   el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
   el.className = 'timer-display' + (discussTimeLeft <= 30 ? ' urgent' : '');
   var fill = document.getElementById('timerFill');
-  fill.style.width = (discussTimeLeft / 180 * 100) + '%';
+  fill.style.width = (selectedTime > 0 ? (discussTimeLeft / selectedTime * 100) : 100) + '%';
   fill.className = 'timer-fill' + (discussTimeLeft <= 30 ? ' urgent' : '');
 }
 
